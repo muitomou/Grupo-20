@@ -37,13 +37,13 @@ Para cumplir con los quórums y dependencias, las máquinas deben levantarse en 
    
    make docker-VM4
    
-   (Dar unos 5 segundos de margen para que se levanten los servidores).
+   
 
 3. *MV2 (Productores + Nodo DB3):*
    
    make docker-VM2
    
-    (Dar unos 20 segundos de margen)
+    
 4. *MV3 (Consumidores + Nodo DB2):*
    
    make docker-VM3
@@ -70,8 +70,8 @@ make clean
 
 Esto envía una señal al Broker Central, el cual realizará lo siguiente:
 1. Recolectar las estadísticas de todo el sistema.
-2. Escribir el archivo Reporte.txt con los resultados requeridos en la rúbrica.
-3. Notificar a los clientes para que guarden sus archivos .csv.
+2. Escribir el archivo Reporte.txt con los resultados requeridos en la rúbrica en la maquina virtual del Broker.
+3. Notificar a los clientes para que guarden sus archivos .csv en la maquina virtual del consumidor la maquina virtual 3.
 4. Bajar y limpiar los contenedores de Docker.
 
 ---
@@ -97,3 +97,17 @@ El sistema soporta desconexiones. Se pueden probar abriendo otra terminal y ejec
   El Broker no se cae; arroja un timeout y rechaza la compra sin afectar el inventario. Se puede volver a iniciar con docker start banco_usm.
 
 Nota: Al finalizar la revisión en máquinas virtuales, recordar usar exit en cada terminal para cerrar correctamente las sesiones SSH.
+## IMPORTANTE: Tiempos de Compilación en las MV
+No se porque pero los tiempos de compilacion de las maquinas virtuales son absurdos tardando varios minutos asi que tenga mucha paciencia al probar ya que la mv1 tardo un par de minutos la mv4 tardo 3 minutos mas que la 1 la mv 3 tardo 4 mas que la 4 y la mv2 tardo 4 minutos mas que la 3.
+
+### Instrucciones Críticas para la Ejecución:
+Para evaluar correctamente el flujo de compras, siga estrictamente este orden:
+1. Levante la **MV1** y **MV4**.
+2. Levante la **MV2** y abra los logs del Broker en la MV1 (`make logs`).
+3. **ESPERE** pacientemente mirando la MV1 hasta que aparezcan los mensajes:
+   * `Entidad registrada: DataClub`
+   * `Entidad registrada: GoLounge`
+   * `Entidad registrada: ...`
+4. **SOLO CUANDO APAREZCAN ESTOS MENSAJES**, levante la **MV3** (Consumidores).
+
+*Nota: Si la MV3 se ejecuta antes de que la MV2 termine de compilar, los clientes consultarán una cartelera vacía y finalizarán su ejecución por diseño (`exited with code 0`). Si esto ocurre, no reinicie el sistema completo; simplemente vuelva a ejecutar `make docker-VM3` una vez que los productores hayan registrado sus eventos.*
