@@ -54,7 +54,7 @@ Para cumplir con los quórums y dependencias, las máquinas deben levantarse en 
 
 ## Monitoreo y Visualización
 
-Los procesos se levantan en segundo plano (detached). Para ver la salida de consola y la interacción entre entidades, se debe abrir otra terminal en la raíz del proyecto y ejecutar:
+Los procesos se levantan en segundo plano . Para ver la salida de consola y la interacción entre entidades, se debe abrir otra terminal en la raíz del proyecto y ejecutar:
 bash
 make logs
 
