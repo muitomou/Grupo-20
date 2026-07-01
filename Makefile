@@ -45,3 +45,15 @@ collect-logs:
 	@docker logs gateway 2>/dev/null >> logs_finales.txt || true
 	@cat logs_cliente*.txt 2>/dev/null >> logs_finales.txt || true
 	@echo "Archivo logs_finales.txt generado."
+
+auditoria:
+	@echo "Esperando 15 segundos para convergencia..."
+	@sleep 15
+	@echo "Generando estados finales..."
+	@# Aquí debes llamar a un comando que cada datanode tenga para exportar su log
+	@docker exec datanode1 sh -c "cat /app/logs_finales.txt" > log_dn1.txt
+	@docker exec datanode2 sh -c "cat /app/logs_finales.txt" > log_dn2.txt
+	@docker exec datanode3 sh -c "cat /app/logs_finales.txt" > log_dn3.txt
+	@echo "Verificando consistencia..."
+	@diff log_dn1.txt log_dn2.txt > /dev/null && diff log_dn2.txt log_dn3.txt > /dev/null && echo "CONVERGENCIA EXITOSA: Los nodos son idénticos" || echo "ERROR: Los estados no coinciden"
+	@cat log_dn1.txt log_dn2.txt log_dn3.txt > Reporte.txt
