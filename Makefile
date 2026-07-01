@@ -33,6 +33,10 @@ clean:
 	rm -f Reporte.txt
 
 auditoria:
-	@echo "Esperando a que el Broker (en VM1) termine de emitir el reporte final..."
-	@sleep 20
-	@if [ -f Reporte.txt ]; then cat Reporte.txt; else echo "Reporte.txt no encontrado aún. Revisa logs del broker."; fi
+	@echo "Esperando a que el Broker (en VM1) termine de emitir el reporte final (esperando hasta 60s)..."
+	@for i in $$(seq 1 30); do \
+		docker exec broker cat Reporte.txt > Reporte.txt 2>/dev/null || true; \
+		if [ -s Reporte.txt ]; then break; fi; \
+		sleep 2; \
+	done
+	@if [ -s Reporte.txt ]; then cat Reporte.txt; else echo "Reporte.txt no encontrado. Por favor, ejecuta 'docker logs broker' para ver qué pasó."; fi

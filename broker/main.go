@@ -94,7 +94,9 @@ func (s *server) EnviarActualizacion(ctx context.Context, req *pb.UpdateOrderReq
 
 func (s *server) ReportarTermino(ctx context.Context, req *pb.ClientDoneRequest) (*pb.ClientDoneResponse, error) {
 	val := atomic.AddInt32(&s.finishedCount, 1)
+	log.Printf("ReportarTermino recibido de %s (Total: %d/%d)", req.ClientId, val, s.expectedCount)
 	if val == s.expectedCount {
+		log.Printf("Todas las entidades han terminado. Iniciando periodo de gracia de 16 segundos...")
 		go s.triggerGracePeriodAndAudit()
 	}
 	return &pb.ClientDoneResponse{Success: true}, nil
@@ -181,7 +183,12 @@ func (s *server) triggerGracePeriodAndAudit() {
 	s.mu.Unlock()
 	reportData += "================================="
 
-	os.WriteFile("Reporte.txt", []byte(reportData), 0644)
+	err := os.WriteFile("Reporte.txt", []byte(reportData), 0644)
+	if err != nil {
+		log.Printf("Error escribiendo Reporte.txt: %v", err)
+	} else {
+		log.Printf("Reporte.txt generado exitosamente en el contenedor del Broker.")
+	}
 }
 
 func main() {

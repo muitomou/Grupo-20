@@ -48,27 +48,35 @@ func main() {
 		clock++
 
 		vc := map[string]int32{"Producer": clock}
-
-		conn, err := grpc.Dial(*brokerAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-		if err != nil {
-			log.Printf("Fallo conexion a broker: %v", err)
-			continue
-		}
-
-		client := pb.NewOrderGatewayClient(conn)
 		req := &pb.UpdateOrderRequest{
 			PedidoId:    pedidoID,
 			Estado:      estado,
 			VectorClock: vc,
 		}
 
-		_, err = client.EnviarActualizacion(context.Background(), req)
+		var err error
+		for retries := 0; retries < 20; retries++ {
+			conn, dialErr := grpc.Dial(*brokerAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+			if dialErr != nil {
+				time.Sleep(3 * time.Second)
+				continue
+			}
+			client := pb.NewOrderGatewayClient(conn)
+			_, err = client.EnviarActualizacion(context.Background(), req)
+			conn.Close()
+
+			if err == nil {
+				break
+			}
+			log.Printf("Red no lista, reintentando actualizacion %s en 3s... (%v)", pedidoID, err)
+			time.Sleep(3 * time.Second)
+		}
+
 		if err != nil {
-			log.Printf("Error enviando actualizacion %s: %v", pedidoID, err)
+			log.Printf("Error definitivo enviando actualizacion %s: %v", pedidoID, err)
 		} else {
 			log.Printf("Actualizacion enviada: %s -> %s", pedidoID, estado)
 		}
-		conn.Close()
 	}
 	log.Println("Simulacion finalizada")
 

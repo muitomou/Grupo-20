@@ -36,6 +36,7 @@ type server struct {
 	mu          sync.RWMutex
 	data        map[string]*pb.PedidoData
 	graceActive bool
+	graceTimer  bool
 }
 
 func max(a, b int32) int32 {
@@ -210,13 +211,14 @@ func serializeState(data map[string]*pb.PedidoData) string {
 func (s *server) SignalGracePeriod(ctx context.Context, req *pb.GraceRequest) (*pb.GraceResponse, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if !s.graceActive {
-		s.graceActive = true
+	if !s.graceTimer {
+		s.graceTimer = true
 		go func() {
 			time.Sleep(15 * time.Second)
-			s.mu.RLock()
+			s.mu.Lock()
+			s.graceActive = true
 			str := serializeState(s.data)
-			s.mu.RUnlock()
+			s.mu.Unlock()
 			os.WriteFile("logs_finales.txt", []byte(str), 0644)
 		}()
 	}
