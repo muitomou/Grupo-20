@@ -87,6 +87,26 @@ func (s *server) ConsultarEstado(ctx context.Context, req *pb.ConsultarEstadoReq
 	return client.ConsultarEstado(ctx, req)
 }
 
+func (s *server) ReportarTermino(ctx context.Context, req *pb.ClientDoneRequest) (*pb.ClientDoneResponse, error) {
+	conn, err := grpc.Dial(s.brokerAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+	client := pb.NewOrderGatewayClient(conn)
+	return client.ReportarTermino(ctx, req)
+}
+
+func (s *server) ReportarRYW(ctx context.Context, req *pb.RYWRequest) (*pb.RYWResponse, error) {
+	conn, err := grpc.Dial(s.brokerAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+	client := pb.NewOrderGatewayClient(conn)
+	return client.ReportarRYW(ctx, req)
+}
+
 func main() {
 	port := flag.String("port", "8080", "")
 	broker := flag.String("broker", "localhost:9090", "")

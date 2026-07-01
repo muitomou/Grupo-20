@@ -22,17 +22,19 @@ const (
 	OrderGateway_CrearPedido_FullMethodName         = "/distrieats.OrderGateway/CrearPedido"
 	OrderGateway_ConsultarEstado_FullMethodName     = "/distrieats.OrderGateway/ConsultarEstado"
 	OrderGateway_EnviarActualizacion_FullMethodName = "/distrieats.OrderGateway/EnviarActualizacion"
+	OrderGateway_ReportarTermino_FullMethodName     = "/distrieats.OrderGateway/ReportarTermino"
+	OrderGateway_ReportarRYW_FullMethodName         = "/distrieats.OrderGateway/ReportarRYW"
 )
 
 // OrderGatewayClient is the client API for OrderGateway service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-//
-// Servicio expuesto por el Gateway y el Broker Central
 type OrderGatewayClient interface {
 	CrearPedido(ctx context.Context, in *CrearPedidoRequest, opts ...grpc.CallOption) (*CrearPedidoResponse, error)
 	ConsultarEstado(ctx context.Context, in *ConsultarEstadoRequest, opts ...grpc.CallOption) (*ConsultarEstadoResponse, error)
 	EnviarActualizacion(ctx context.Context, in *UpdateOrderRequest, opts ...grpc.CallOption) (*UpdateOrderResponse, error)
+	ReportarTermino(ctx context.Context, in *ClientDoneRequest, opts ...grpc.CallOption) (*ClientDoneResponse, error)
+	ReportarRYW(ctx context.Context, in *RYWRequest, opts ...grpc.CallOption) (*RYWResponse, error)
 }
 
 type orderGatewayClient struct {
@@ -73,15 +75,35 @@ func (c *orderGatewayClient) EnviarActualizacion(ctx context.Context, in *Update
 	return out, nil
 }
 
+func (c *orderGatewayClient) ReportarTermino(ctx context.Context, in *ClientDoneRequest, opts ...grpc.CallOption) (*ClientDoneResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ClientDoneResponse)
+	err := c.cc.Invoke(ctx, OrderGateway_ReportarTermino_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *orderGatewayClient) ReportarRYW(ctx context.Context, in *RYWRequest, opts ...grpc.CallOption) (*RYWResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RYWResponse)
+	err := c.cc.Invoke(ctx, OrderGateway_ReportarRYW_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OrderGatewayServer is the server API for OrderGateway service.
 // All implementations must embed UnimplementedOrderGatewayServer
 // for forward compatibility.
-//
-// Servicio expuesto por el Gateway y el Broker Central
 type OrderGatewayServer interface {
 	CrearPedido(context.Context, *CrearPedidoRequest) (*CrearPedidoResponse, error)
 	ConsultarEstado(context.Context, *ConsultarEstadoRequest) (*ConsultarEstadoResponse, error)
 	EnviarActualizacion(context.Context, *UpdateOrderRequest) (*UpdateOrderResponse, error)
+	ReportarTermino(context.Context, *ClientDoneRequest) (*ClientDoneResponse, error)
+	ReportarRYW(context.Context, *RYWRequest) (*RYWResponse, error)
 	mustEmbedUnimplementedOrderGatewayServer()
 }
 
@@ -100,6 +122,12 @@ func (UnimplementedOrderGatewayServer) ConsultarEstado(context.Context, *Consult
 }
 func (UnimplementedOrderGatewayServer) EnviarActualizacion(context.Context, *UpdateOrderRequest) (*UpdateOrderResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method EnviarActualizacion not implemented")
+}
+func (UnimplementedOrderGatewayServer) ReportarTermino(context.Context, *ClientDoneRequest) (*ClientDoneResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ReportarTermino not implemented")
+}
+func (UnimplementedOrderGatewayServer) ReportarRYW(context.Context, *RYWRequest) (*RYWResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ReportarRYW not implemented")
 }
 func (UnimplementedOrderGatewayServer) mustEmbedUnimplementedOrderGatewayServer() {}
 func (UnimplementedOrderGatewayServer) testEmbeddedByValue()                      {}
@@ -176,6 +204,42 @@ func _OrderGateway_EnviarActualizacion_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OrderGateway_ReportarTermino_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ClientDoneRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrderGatewayServer).ReportarTermino(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OrderGateway_ReportarTermino_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrderGatewayServer).ReportarTermino(ctx, req.(*ClientDoneRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OrderGateway_ReportarRYW_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RYWRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrderGatewayServer).ReportarRYW(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OrderGateway_ReportarRYW_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrderGatewayServer).ReportarRYW(ctx, req.(*RYWRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // OrderGateway_ServiceDesc is the grpc.ServiceDesc for OrderGateway service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -195,16 +259,26 @@ var OrderGateway_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "EnviarActualizacion",
 			Handler:    _OrderGateway_EnviarActualizacion_Handler,
 		},
+		{
+			MethodName: "ReportarTermino",
+			Handler:    _OrderGateway_ReportarTermino_Handler,
+		},
+		{
+			MethodName: "ReportarRYW",
+			Handler:    _OrderGateway_ReportarRYW_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "proto/distrieats.proto",
 }
 
 const (
-	DatanodeService_UpdateOrder_FullMethodName     = "/distrieats.DatanodeService/UpdateOrder"
-	DatanodeService_ConsultarEstado_FullMethodName = "/distrieats.DatanodeService/ConsultarEstado"
-	DatanodeService_GossipSync_FullMethodName      = "/distrieats.DatanodeService/GossipSync"
-	DatanodeService_CrearPedido_FullMethodName     = "/distrieats.DatanodeService/CrearPedido"
+	DatanodeService_UpdateOrder_FullMethodName       = "/distrieats.DatanodeService/UpdateOrder"
+	DatanodeService_ConsultarEstado_FullMethodName   = "/distrieats.DatanodeService/ConsultarEstado"
+	DatanodeService_GossipSync_FullMethodName        = "/distrieats.DatanodeService/GossipSync"
+	DatanodeService_CrearPedido_FullMethodName       = "/distrieats.DatanodeService/CrearPedido"
+	DatanodeService_SignalGracePeriod_FullMethodName = "/distrieats.DatanodeService/SignalGracePeriod"
+	DatanodeService_GetFinalState_FullMethodName     = "/distrieats.DatanodeService/GetFinalState"
 )
 
 // DatanodeServiceClient is the client API for DatanodeService service.
@@ -215,6 +289,8 @@ type DatanodeServiceClient interface {
 	ConsultarEstado(ctx context.Context, in *ConsultarEstadoRequest, opts ...grpc.CallOption) (*ConsultarEstadoResponse, error)
 	GossipSync(ctx context.Context, in *GossipRequest, opts ...grpc.CallOption) (*GossipResponse, error)
 	CrearPedido(ctx context.Context, in *CrearPedidoRequest, opts ...grpc.CallOption) (*CrearPedidoResponse, error)
+	SignalGracePeriod(ctx context.Context, in *GraceRequest, opts ...grpc.CallOption) (*GraceResponse, error)
+	GetFinalState(ctx context.Context, in *StateRequest, opts ...grpc.CallOption) (*StateResponse, error)
 }
 
 type datanodeServiceClient struct {
@@ -265,6 +341,26 @@ func (c *datanodeServiceClient) CrearPedido(ctx context.Context, in *CrearPedido
 	return out, nil
 }
 
+func (c *datanodeServiceClient) SignalGracePeriod(ctx context.Context, in *GraceRequest, opts ...grpc.CallOption) (*GraceResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GraceResponse)
+	err := c.cc.Invoke(ctx, DatanodeService_SignalGracePeriod_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *datanodeServiceClient) GetFinalState(ctx context.Context, in *StateRequest, opts ...grpc.CallOption) (*StateResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(StateResponse)
+	err := c.cc.Invoke(ctx, DatanodeService_GetFinalState_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DatanodeServiceServer is the server API for DatanodeService service.
 // All implementations must embed UnimplementedDatanodeServiceServer
 // for forward compatibility.
@@ -273,6 +369,8 @@ type DatanodeServiceServer interface {
 	ConsultarEstado(context.Context, *ConsultarEstadoRequest) (*ConsultarEstadoResponse, error)
 	GossipSync(context.Context, *GossipRequest) (*GossipResponse, error)
 	CrearPedido(context.Context, *CrearPedidoRequest) (*CrearPedidoResponse, error)
+	SignalGracePeriod(context.Context, *GraceRequest) (*GraceResponse, error)
+	GetFinalState(context.Context, *StateRequest) (*StateResponse, error)
 	mustEmbedUnimplementedDatanodeServiceServer()
 }
 
@@ -294,6 +392,12 @@ func (UnimplementedDatanodeServiceServer) GossipSync(context.Context, *GossipReq
 }
 func (UnimplementedDatanodeServiceServer) CrearPedido(context.Context, *CrearPedidoRequest) (*CrearPedidoResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CrearPedido not implemented")
+}
+func (UnimplementedDatanodeServiceServer) SignalGracePeriod(context.Context, *GraceRequest) (*GraceResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SignalGracePeriod not implemented")
+}
+func (UnimplementedDatanodeServiceServer) GetFinalState(context.Context, *StateRequest) (*StateResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetFinalState not implemented")
 }
 func (UnimplementedDatanodeServiceServer) mustEmbedUnimplementedDatanodeServiceServer() {}
 func (UnimplementedDatanodeServiceServer) testEmbeddedByValue()                         {}
@@ -388,6 +492,42 @@ func _DatanodeService_CrearPedido_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DatanodeService_SignalGracePeriod_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GraceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DatanodeServiceServer).SignalGracePeriod(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DatanodeService_SignalGracePeriod_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DatanodeServiceServer).SignalGracePeriod(ctx, req.(*GraceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DatanodeService_GetFinalState_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DatanodeServiceServer).GetFinalState(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DatanodeService_GetFinalState_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DatanodeServiceServer).GetFinalState(ctx, req.(*StateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // DatanodeService_ServiceDesc is the grpc.ServiceDesc for DatanodeService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -410,6 +550,14 @@ var DatanodeService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CrearPedido",
 			Handler:    _DatanodeService_CrearPedido_Handler,
+		},
+		{
+			MethodName: "SignalGracePeriod",
+			Handler:    _DatanodeService_SignalGracePeriod_Handler,
+		},
+		{
+			MethodName: "GetFinalState",
+			Handler:    _DatanodeService_GetFinalState_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

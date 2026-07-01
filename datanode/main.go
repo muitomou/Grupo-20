@@ -3,9 +3,12 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"math/rand"
 	"net"
+	"os"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -28,10 +31,11 @@ var (
 
 type server struct {
 	pb.UnimplementedDatanodeServiceServer
-	nodeID string
-	peers  []string
-	mu     sync.RWMutex
-	data   map[string]*pb.PedidoData
+	nodeID      string
+	peers       []string
+	mu          sync.RWMutex
+	data        map[string]*pb.PedidoData
+	graceActive bool
 }
 
 func max(a, b int32) int32 {
@@ -64,6 +68,10 @@ func resolveState(currentState, newState string) string {
 func (s *server) UpdateOrder(ctx context.Context, req *pb.UpdateOrderRequest) (*pb.UpdateOrderResponse, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
+	if s.graceActive {
+		return &pb.UpdateOrderResponse{Success: false}, nil
+	}
 
 	existing, exists := s.data[req.PedidoId]
 	if !exists {
@@ -105,6 +113,10 @@ func (s *server) ConsultarEstado(ctx context.Context, req *pb.ConsultarEstadoReq
 func (s *server) GossipSync(ctx context.Context, req *pb.GossipRequest) (*pb.GossipResponse, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
+	if s.graceActive {
+		return &pb.GossipResponse{Success: false}, nil
+	}
 
 	for pedidoID, incomingData := range req.EstadoPedidos {
 		existing, exists := s.data[pedidoID]
@@ -153,6 +165,10 @@ func (s *server) CrearPedido(ctx context.Context, req *pb.CrearPedidoRequest) (*
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	if s.graceActive {
+		return &pb.CrearPedidoResponse{Success: false}, nil
+	}
+
 	_, exists := s.data[req.PedidoId]
 	if !exists {
 		s.data[req.PedidoId] = &pb.PedidoData{
@@ -162,6 +178,55 @@ func (s *server) CrearPedido(ctx context.Context, req *pb.CrearPedidoRequest) (*
 		log.Printf("Pedido %s creado (Recibido)", req.PedidoId)
 	}
 	return &pb.CrearPedidoResponse{Success: true, DatanodeId: s.nodeID}, nil
+}
+
+func serializeState(data map[string]*pb.PedidoData) string {
+	keys := make([]string, 0, len(data))
+	for k := range data {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	var sb strings.Builder
+	for _, k := range keys {
+		pd := data[k]
+		vcKeys := make([]string, 0, len(pd.VectorClock))
+		for vk := range pd.VectorClock {
+			vcKeys = append(vcKeys, vk)
+		}
+		sort.Strings(vcKeys)
+
+		var vcParts []string
+		for _, vk := range vcKeys {
+			vcParts = append(vcParts, fmt.Sprintf(" %s :%d ", vk, pd.VectorClock[vk]))
+		}
+		vcStr := strings.Join(vcParts, ",")
+
+		sb.WriteString(fmt.Sprintf("Pedido ID : %s | Estado Final : %s | Reloj Vectorial : [%s]\n", k, pd.Estado, vcStr))
+	}
+	return sb.String()
+}
+
+func (s *server) SignalGracePeriod(ctx context.Context, req *pb.GraceRequest) (*pb.GraceResponse, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if !s.graceActive {
+		s.graceActive = true
+		go func() {
+			time.Sleep(15 * time.Second)
+			s.mu.RLock()
+			str := serializeState(s.data)
+			s.mu.RUnlock()
+			os.WriteFile("logs_finales.txt", []byte(str), 0644)
+		}()
+	}
+	return &pb.GraceResponse{Success: true}, nil
+}
+
+func (s *server) GetFinalState(ctx context.Context, req *pb.StateRequest) (*pb.StateResponse, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return &pb.StateResponse{StateData: serializeState(s.data)}, nil
 }
 
 func main() {

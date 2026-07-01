@@ -28,7 +28,7 @@ func main() {
 	defer file.Close()
 
 	reader := csv.NewReader(file)
-	_, _ = reader.Read() // Salta la cabecera del CSV
+	_, _ = reader.Read()
 
 	clock := int32(0)
 
@@ -37,15 +37,13 @@ func main() {
 		if err == io.EOF {
 			break
 		}
-		// Validamos que la fila tenga al menos las 4 columnas necesarias
 		if err != nil || len(record) < 4 {
 			continue
 		}
 
 		pedidoID := record[0]
-		estado := record[3] // ¡Cambio clave! El estado ahora se lee de la 4ta columna
+		estado := record[3]
 
-		// Emisión aleatoria de 1 a 3 segundos exigida por la rúbrica
 		time.Sleep(time.Duration(rand.Intn(3)+1) * time.Second)
 		clock++
 
@@ -73,4 +71,13 @@ func main() {
 		conn.Close()
 	}
 	log.Println("Simulacion finalizada")
+
+	conn, err := grpc.Dial(*brokerAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err == nil {
+		defer conn.Close()
+		client := pb.NewOrderGatewayClient(conn)
+		client.ReportarTermino(context.Background(), &pb.ClientDoneRequest{
+			ClientId: "Producer",
+		})
+	}
 }

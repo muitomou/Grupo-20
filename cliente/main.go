@@ -53,7 +53,16 @@ func main() {
 
 	if consultarRes.Estado != "No Encontrado" {
 		log.Printf("\n=== VALIDACION READ YOUR WRITES EXITOSA ===\nCliente %s (Pedido: %s): Estado encontrado -> %s\nAfinidad de sesion confirmada.\n===========================================\n", *clienteID, pedidoID, consultarRes.Estado)
+		client.ReportarRYW(context.Background(), &pb.RYWRequest{
+			ClientId:   *clienteID,
+			PedidoId:   pedidoID,
+			DatanodeId: crearRes.DatanodeId,
+		})
 	} else {
 		log.Fatalf("Falló READ YOUR WRITES: El pedido %s no fue encontrado inmediatamente despues de crearlo.", pedidoID)
 	}
+
+	client.ReportarTermino(context.Background(), &pb.ClientDoneRequest{
+		ClientId: *clienteID,
+	})
 }

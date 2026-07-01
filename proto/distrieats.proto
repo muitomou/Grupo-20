@@ -3,12 +3,12 @@ syntax = "proto3";
 package distrieats;
 option go_package = "distrieats/proto";
 
-
-// Servicio expuesto por el Gateway y el Broker Central
 service OrderGateway {
   rpc CrearPedido(CrearPedidoRequest) returns (CrearPedidoResponse);
   rpc ConsultarEstado(ConsultarEstadoRequest) returns (ConsultarEstadoResponse);
   rpc EnviarActualizacion(UpdateOrderRequest) returns (UpdateOrderResponse);
+  rpc ReportarTermino(ClientDoneRequest) returns (ClientDoneResponse);
+  rpc ReportarRYW(RYWRequest) returns (RYWResponse);
 }
 
 service DatanodeService {
@@ -16,6 +16,8 @@ service DatanodeService {
   rpc ConsultarEstado(ConsultarEstadoRequest) returns (ConsultarEstadoResponse);
   rpc GossipSync(GossipRequest) returns (GossipResponse);
   rpc CrearPedido(CrearPedidoRequest) returns (CrearPedidoResponse);
+  rpc SignalGracePeriod(GraceRequest) returns (GraceResponse);
+  rpc GetFinalState(StateRequest) returns (StateResponse);
 }
 
 message CrearPedidoRequest {
@@ -63,4 +65,34 @@ message GossipRequest {
 message GossipResponse {
   bool success = 1;
   map<string, PedidoData> pedidos_actualizados = 2; 
+}
+
+message ClientDoneRequest {
+  string client_id = 1;
+}
+
+message ClientDoneResponse {
+  bool success = 1;
+}
+
+message RYWRequest {
+  string client_id = 1;
+  string pedido_id = 2;
+  string datanode_id = 3;
+}
+
+message RYWResponse {
+  bool success = 1;
+}
+
+message GraceRequest {}
+
+message GraceResponse {
+  bool success = 1;
+}
+
+message StateRequest {}
+
+message StateResponse {
+  string state_data = 1;
 }

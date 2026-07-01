@@ -6,8 +6,11 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 	"strings"
+	"sync"
 	"sync/atomic"
+	"time"
 
 	pb "distrieats/proto"
 
@@ -17,8 +20,12 @@ import (
 
 type server struct {
 	pb.UnimplementedOrderGatewayServer
-	datanodes []string
-	nextDN    uint64
+	datanodes     []string
+	nextDN        uint64
+	finishedCount int32
+	expectedCount int32
+	mu            sync.Mutex
+	rywLogs       []string
 }
 
 func (s *server) callWithRetry(call func(string) (interface{}, error)) (interface{}, string, error) {
@@ -85,9 +92,102 @@ func (s *server) EnviarActualizacion(ctx context.Context, req *pb.UpdateOrderReq
 	return &pb.UpdateOrderResponse{Success: true}, nil
 }
 
+func (s *server) ReportarTermino(ctx context.Context, req *pb.ClientDoneRequest) (*pb.ClientDoneResponse, error) {
+	val := atomic.AddInt32(&s.finishedCount, 1)
+	if val == s.expectedCount {
+		go s.triggerGracePeriodAndAudit()
+	}
+	return &pb.ClientDoneResponse{Success: true}, nil
+}
+
+func (s *server) ReportarRYW(ctx context.Context, req *pb.RYWRequest) (*pb.RYWResponse, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	msg := fmt.Sprintf("- %s ( %s) : Validacion Exitosa en %s ( Afinidad de sesion confirmada ) .", req.ClientId, req.PedidoId, req.DatanodeId)
+	s.rywLogs = append(s.rywLogs, msg)
+	return &pb.RYWResponse{Success: true}, nil
+}
+
+func (s *server) triggerGracePeriodAndAudit() {
+	var wg sync.WaitGroup
+	for _, dn := range s.datanodes {
+		wg.Add(1)
+		go func(target string) {
+			defer wg.Done()
+			conn, err := grpc.Dial(target, grpc.WithTransportCredentials(insecure.NewCredentials()))
+			if err != nil {
+				return
+			}
+			defer conn.Close()
+			client := pb.NewDatanodeServiceClient(conn)
+			client.SignalGracePeriod(context.Background(), &pb.GraceRequest{})
+		}(dn)
+	}
+	wg.Wait()
+
+	time.Sleep(16 * time.Second)
+
+	var mu sync.Mutex
+	states := make(map[string]string)
+	for _, dn := range s.datanodes {
+		wg.Add(1)
+		go func(target string) {
+			defer wg.Done()
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			conn, err := grpc.Dial(target, grpc.WithTransportCredentials(insecure.NewCredentials()))
+			if err != nil {
+				return
+			}
+			defer conn.Close()
+			client := pb.NewDatanodeServiceClient(conn)
+			res, err := client.GetFinalState(ctx, &pb.StateRequest{})
+			if err == nil {
+				mu.Lock()
+				states[target] = res.StateData
+				mu.Unlock()
+			}
+		}(dn)
+	}
+	wg.Wait()
+
+	reportData := "=== REPORTE FINAL : DISTRIEATS ===\n[ ESTADO GLOBAL DE PEDIDOS -\n"
+	var finalState string
+	convergence := true
+	for target, st := range states {
+		if finalState == "" {
+			finalState = st
+		} else if finalState != st {
+			convergence = false
+			log.Printf("Divergencia detectada con el nodo %s", target)
+		}
+	}
+	
+	if finalState != "" {
+		reportData += finalState
+	}
+
+	if convergence {
+		reportData += "Convergencia Alcanzada ]\n"
+	} else {
+		reportData += "Divergencia Detectada ]\n"
+	}
+
+	reportData += "\n[ AUDITORIA READ YOUR WRITES ]\n"
+	s.mu.Lock()
+	for _, logMsg := range s.rywLogs {
+		reportData += logMsg + "\n"
+	}
+	s.mu.Unlock()
+	reportData += "================================="
+
+	os.WriteFile("Reporte.txt", []byte(reportData), 0644)
+}
+
 func main() {
 	port := flag.String("port", "9090", "")
 	datanodesFlag := flag.String("datanodes", "localhost:50051,localhost:50052,localhost:50053", "")
+	expectedCount := flag.Int("expected", 4, "")
 	flag.Parse()
 
 	datanodes := strings.Split(*datanodesFlag, ",")
@@ -98,7 +198,8 @@ func main() {
 	}
 
 	srv := &server{
-		datanodes: datanodes,
+		datanodes:     datanodes,
+		expectedCount: int32(*expectedCount),
 	}
 
 	s := grpc.NewServer()
