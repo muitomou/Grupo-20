@@ -34,9 +34,18 @@ func main() {
 		PedidoId:  pedidoID,
 	}
 
-	crearRes, err := client.CrearPedido(context.Background(), crearReq)
+	var crearRes *pb.CrearPedidoResponse
+	for i := 0; i < 20; i++ {
+		crearRes, err = client.CrearPedido(context.Background(), crearReq)
+		if err == nil && crearRes.Success {
+			break
+		}
+		log.Printf("Servicios aún no listos, reintentando en 3s... (%v)", err)
+		time.Sleep(3 * time.Second)
+	}
+
 	if err != nil || !crearRes.Success {
-		log.Fatalf("Error creando pedido: %v", err)
+		log.Fatalf("Error creando pedido tras reintentos: %v", err)
 	}
 
 	log.Printf("Pedido %s creado exitosamente (Asignado a %s)", pedidoID, crearRes.DatanodeId)
