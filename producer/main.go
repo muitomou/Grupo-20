@@ -54,7 +54,6 @@ func main() {
 			VectorClock: vc,
 		}
 
-		var err error
 		for retries := 0; retries < 20; retries++ {
 			conn, dialErr := grpc.Dial(*brokerAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 			if dialErr != nil {
