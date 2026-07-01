@@ -1,0 +1,98 @@
+pedido_id,restaurante,actor,estado,tiempo_relativo
+Ped-M-001,SushiStream,Restaurante,Recibido,1
+Ped-M-001,SushiStream,Restaurante,Preparando,2
+Ped-M-001,SushiStream,Repartidor,En Camino,3
+Ped-M-002,SushiStream,Restaurante,Recibido,3
+Ped-M-003,BurgerNode,Restaurante,Recibido,4
+Ped-M-001,SushiStream,Repartidor,Entregado,5
+Ped-M-002,SushiStream,Restaurante,Preparando,5
+Ped-M-003,BurgerNode,Restaurante,Preparando,5
+Ped-M-002,SushiStream,Repartidor,En Camino,6
+Ped-M-004,SushiStream,Restaurante,Recibido,6
+Ped-M-005,SushiStream,Restaurante,Recibido,6
+Ped-M-004,SushiStream,Restaurante,Preparando,7
+Ped-M-005,SushiStream,Restaurante,Preparando,7
+Ped-M-006,SushiStream,Restaurante,Recibido,7
+Ped-M-007,BurgerNode,Restaurante,Recibido,7
+Ped-M-003,BurgerNode,Repartidor,En Camino,8
+Ped-M-004,SushiStream,Repartidor,En Camino,8
+Ped-M-006,SushiStream,Restaurante,Preparando,8
+Ped-M-002,SushiStream,Repartidor,Entregado,9
+Ped-M-005,SushiStream,Repartidor,En Camino,9
+Ped-M-008,GopherTacos,Restaurante,Recibido,9
+Ped-M-009,SushiStream,Restaurante,Recibido,9
+Ped-M-003,BurgerNode,Repartidor,Entregado,10
+Ped-M-007,BurgerNode,Restaurante,Preparando,10
+Ped-M-009,SushiStream,Restaurante,Preparando,10
+Ped-M-004,SushiStream,Repartidor,Entregado,11
+Ped-M-005,SushiStream,Repartidor,Entregado,11
+Ped-M-006,SushiStream,Repartidor,En Camino,11
+Ped-M-009,SushiStream,Repartidor,En Camino,11
+Ped-M-010,SushiStream,Restaurante,Recibido,11
+Ped-M-008,GopherTacos,Restaurante,Preparando,12
+Ped-M-006,SushiStream,Repartidor,Entregado,13
+Ped-M-007,BurgerNode,Repartidor,En Camino,13
+Ped-M-009,SushiStream,Repartidor,Entregado,13
+Ped-M-011,GopherTacos,Restaurante,Recibido,13
+Ped-M-007,BurgerNode,Repartidor,Entregado,14
+Ped-M-010,SushiStream,Restaurante,Preparando,14
+Ped-M-008,GopherTacos,Repartidor,En Camino,15
+Ped-M-011,GopherTacos,Restaurante,Preparando,15
+Ped-M-012,DockerPizza,Restaurante,Recibido,15
+Ped-M-013,GopherTacos,Restaurante,Recibido,15
+Ped-M-014,BurgerNode,Restaurante,Recibido,15
+Ped-M-008,GopherTacos,Repartidor,Entregado,16
+Ped-M-010,SushiStream,Restaurante,Cancelado,16
+Ped-M-011,GopherTacos,Repartidor,En Camino,16
+Ped-M-015,GopherTacos,Restaurante,Recibido,16
+Ped-M-012,DockerPizza,Restaurante,Preparando,17
+Ped-M-011,GopherTacos,Repartidor,Entregado,18
+Ped-M-013,GopherTacos,Restaurante,Preparando,18
+Ped-M-014,BurgerNode,Restaurante,Preparando,18
+Ped-M-016,BurgerNode,Restaurante,Recibido,18
+Ped-M-015,GopherTacos,Restaurante,Preparando,19
+Ped-M-017,SushiStream,Restaurante,Recibido,19
+Ped-M-018,DockerPizza,Restaurante,Recibido,19
+Ped-M-019,DockerPizza,Restaurante,Recibido,19
+Ped-M-020,SushiStream,Restaurante,Recibido,19
+Ped-M-021,DockerPizza,Restaurante,Recibido,19
+Ped-M-012,DockerPizza,Repartidor,En Camino,20
+Ped-M-013,GopherTacos,Repartidor,En Camino,20
+Ped-M-014,BurgerNode,Repartidor,En Camino,20
+Ped-M-016,BurgerNode,Restaurante,Preparando,20
+Ped-M-017,SushiStream,Restaurante,Preparando,20
+Ped-M-021,DockerPizza,Restaurante,Preparando,20
+Ped-M-022,DockerPizza,Restaurante,Recibido,20
+Ped-M-013,GopherTacos,Repartidor,Entregado,21
+Ped-M-015,GopherTacos,Repartidor,En Camino,21
+Ped-M-020,SushiStream,Restaurante,Preparando,21
+Ped-M-018,DockerPizza,Restaurante,Preparando,22
+Ped-M-019,DockerPizza,Restaurante,Preparando,22
+Ped-M-023,GopherTacos,Restaurante,Recibido,22
+Ped-M-012,DockerPizza,Repartidor,Entregado,23
+Ped-M-014,BurgerNode,Repartidor,Entregado,23
+Ped-M-016,BurgerNode,Repartidor,En Camino,23
+Ped-M-017,SushiStream,Repartidor,En Camino,23
+Ped-M-020,SushiStream,Repartidor,En Camino,23
+Ped-M-021,DockerPizza,Repartidor,En Camino,23
+Ped-M-022,DockerPizza,Restaurante,Preparando,23
+Ped-M-015,GopherTacos,Repartidor,Entregado,24
+Ped-M-018,DockerPizza,Repartidor,En Camino,24
+Ped-M-020,SushiStream,Repartidor,Entregado,24
+Ped-M-022,DockerPizza,Restaurante,Cancelado,24
+Ped-M-024,SushiStream,Restaurante,Recibido,24
+Ped-M-025,GopherTacos,Restaurante,Recibido,24
+Ped-M-016,BurgerNode,Repartidor,Entregado,25
+Ped-M-019,DockerPizza,Repartidor,En Camino,25
+Ped-M-021,DockerPizza,Repartidor,Entregado,25
+Ped-M-023,GopherTacos,Restaurante,Preparando,25
+Ped-M-025,GopherTacos,Restaurante,Preparando,25
+Ped-M-017,SushiStream,Repartidor,Entregado,26
+Ped-M-019,DockerPizza,Repartidor,Entregado,26
+Ped-M-018,DockerPizza,Repartidor,Entregado,27
+Ped-M-024,SushiStream,Restaurante,Preparando,27
+Ped-M-025,GopherTacos,Restaurante,Cancelado,27
+Ped-M-023,GopherTacos,Repartidor,En Camino,28
+Ped-M-023,GopherTacos,Repartidor,Entregado,29
+Ped-M-024,SushiStream,Repartidor,En Camino,29
+Ped-M-024,SushiStream,Repartidor,Entregado,31

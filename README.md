@@ -1,113 +1,19 @@
-# Laboratorio 2: Sistemas Distribuidos - DiscoPass
+# Laboratorio 3: Sistemas Distribuidos - DistriEats
 
-Este repositorio contiene la implementación del Laboratorio 2 de la asignatura Sistemas Distribuidos. El sistema consiste en un ecosistema distribuido de venta y validación de entradas para discotecas (DiscoPass), coordinado por un Broker Central, con validación de pagos a través de una simulación del Banco USM y un sistema de almacenamiento replicado que garantiza consistencia y tolerancia a fallos mediante quórums (N=3, W=2, R=2).
-
-### Integrantes (Grupo 20)
-- Ignacio Casanova | Rol: 202273631-3  
-- Mauro Castillo | Rol: 202273627-5
-- Nicolás Ortíz | Rol: 202273528-7
-
-
-## Características de la Implementación 
-
-El sistema implementa las siguientes funcionalidades principales:
-
-- *Almacenamiento Distribuido (N=3, W=2, R=2):* Replicación de datos con tolerancia a fallos y resincronización automática de nodos caídos.
-- *Broker Central:* Autenticación de entidades, validación de eventos, quórum de lectura/escritura, gestión de compras y generación del Reporte.txt al finalizar.
-- *Productores (Discotecas):* Publicación periódica de eventos mediante gRPC, asegurando idempotencia con identificadores únicos.
-- *Consumidores:* Flujo de compra, almacenamiento local de tickets en archivos CSV y recuperación del historial ante desconexiones.
-- *Banco USM:* Validación de pagos probabilística (80% general, 90% crédito) con manejo de caídas por parte del Broker.
-- *Arquitectura:* Orquestación completa en contenedores Docker mediante Makefile, comunicándose exclusivamente a través de gRPC y Protocol Buffers.
-
----
+## Integrantes (Grupo 20)
+* Mauro Castillo | Rol: 202273627-5
+* Ignacio Casanova | Rol: 202273631-3
+* Nicolás Ortíz | Rol: 202273528-7
 
 ## Instrucciones de Ejecución
+Este ecosistema logístico está completamente aislado en contenedores Docker y orquestado con Make.
+Para ejecutar la simulación, abra 4 terminales en el directorio raíz del proyecto y ejecute en orden secuencial:
 
-Es necesario estar situado en la raíz del proyecto para ejecutar los comandos del Makefile.
+1. `make docker-VM1` (Levanta el Broker Central e inicia la simulación del CSV)
+2. `make docker-VM2` (Levanta Datanode 1, el Gateway Coordinador y Cliente 1)
+3. `make docker-VM3` (Levanta Datanode 2 y Cliente 2)
+4. `make docker-VM4` (Levanta Datanode 3 y Cliente 3)
 
+Para generar el reporte final de auditoría ejecutar make report
+Para limpiar los contenedores ejecutar make clean
 
-### Orden de Inicialización (MVs)
-Para cumplir con los quórums y dependencias, las máquinas deben levantarse en el siguiente orden:
-
-1. *MV1 (Broker Central):*
-  
-   make docker-VM1
-   
-2. *MV4 (Banco USM + Nodo DB1):*
-   
-   make docker-VM4
-   
-   
-
-3. *MV2 (Productores + Nodo DB3):*
-   
-   make docker-VM2
-   
-    
-4. *MV3 (Consumidores + Nodo DB2):*
-   
-   make docker-VM3
-   
-   
-
----
-
-## Monitoreo y Visualización
-
-Los procesos se levantan en segundo plano . Para ver la salida de consola y la interacción entre entidades, se debe abrir otra terminal en la raíz del proyecto y ejecutar:
-
-make logs
-
-Para salir de los logs, presionar Ctrl + C (el sistema seguirá funcionando).
-
----
-
-## Apagado Seguro y Reportes
-
-Para finalizar la ejecución del laboratorio de forma correcta, NO se deben detener los contenedores manualmente. Se debe ejecutar el siguiente comando en la raíz del proyecto:
-
-make clean
-
-Esto envía una señal al Broker Central, el cual realizará lo siguiente:
-1. Recolectar las estadísticas de todo el sistema.
-2. Escribir el archivo Reporte.txt con los resultados requeridos en la rúbrica en la maquina virtual del Broker.
-3. Notificar a los clientes para que guarden sus archivos .csv en la maquina virtual del consumidor la maquina virtual 3.
-4. Bajar y limpiar los contenedores de Docker.
-
----
-
-## Pruebas de Tolerancia a Fallos
-
-El sistema soporta desconexiones. Se pueden probar abriendo otra terminal y ejecutando comandos de Docker:
-
-- *Caída y recuperación de BD:*
-  
-  docker stop nodo_db2
-  
-  El sistema seguirá operando validando con DB1 y DB3 (W=2, R=2).
- 
-  docker start nodo_db2
-  
-  El nodo pedirá la información faltante a los otros nodos para sincronizarse.
-
-- *Caída del Banco:*
-  
-  docker stop banco_usm
-  
-  El Broker no se cae; arroja un timeout y rechaza la compra sin afectar el inventario. Se puede volver a iniciar con docker start banco_usm.
-
-Nota: Al finalizar la revisión en máquinas virtuales, recordar usar exit en cada terminal para cerrar correctamente las sesiones SSH.
-## IMPORTANTE: Tiempos de Compilación en las MV
-No se porque pero los tiempos de compilacion de las maquinas virtuales son absurdos tardando varios minutos asi que tenga mucha paciencia al probar ya que la mv1 tardo un par de minutos la mv4 tardo 3 minutos mas que la 1 la mv 3 tardo 4 mas que la 4 y la mv2 tardo 4 minutos mas que la 3.
-
-### Instrucciones Críticas para la Ejecución:
-Para evaluar correctamente el flujo de compras, siga estrictamente este orden:
-1. Levante la **MV1** y **MV4**.
-2. Levante la **MV2** y abra los logs del Broker en la MV1 (`make logs`).
-3. **ESPERE** pacientemente mirando la MV1 hasta que aparezcan los mensajes:
-   * `Entidad registrada: DataClub`
-   * `Entidad registrada: GoLounge`
-   * `Entidad registrada: ...`
-4. **SOLO CUANDO APAREZCAN ESTOS MENSAJES**, levante la **MV3** (Consumidores).
-
-*Nota: Si la MV3 se ejecuta antes de que la MV2 termine de compilar, los clientes consultarán una cartelera vacía y finalizarán su ejecución por diseño (`exited with code 0`). Si esto ocurre, no reinicie el sistema completo; simplemente vuelva a ejecutar `make docker-VM3` una vez que los productores hayan registrado sus eventos.*

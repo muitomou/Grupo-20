@@ -1,16 +1,15 @@
-# Usamos Go 1.25 basado en Alpine Linux para que la imagen sea muy ligera
-FROM golang:1.25-alpine
-
-# Directorio de trabajo dentro del contenedor
+FROM golang:1.25-alpine AS builder
 WORKDIR /app
-
-# Copiamos los archivos de dependencias primero
 COPY go.mod go.sum ./
-
-# Descargamos las dependencias
 RUN go mod download
-
-# Copiamos todo el código fuente al contenedor
 COPY . .
+RUN go build -o /bin/datanode ./datanode
+RUN go build -o /bin/gateway ./gateway
+RUN go build -o /bin/broker ./broker
+RUN go build -o /bin/producer ./producer
+RUN go build -o /bin/cliente ./cliente
 
-# El comando de ejecución se le pasará dinámicamente desde el docker-compose
+FROM alpine:latest
+WORKDIR /app
+COPY --from=builder /bin/* /usr/local/bin/
+COPY pedidos.csv ./

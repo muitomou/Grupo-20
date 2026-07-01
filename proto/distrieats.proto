@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package distrieats;
+option go_package = "distrieats/proto";
+
+
+// Servicio expuesto por el Gateway y el Broker Central
+service OrderGateway {
+  rpc CrearPedido(CrearPedidoRequest) returns (CrearPedidoResponse);
+  rpc ConsultarEstado(ConsultarEstadoRequest) returns (ConsultarEstadoResponse);
+  rpc EnviarActualizacion(UpdateOrderRequest) returns (UpdateOrderResponse);
+}
+
+service DatanodeService {
+  rpc UpdateOrder(UpdateOrderRequest) returns (UpdateOrderResponse);
+  rpc ConsultarEstado(ConsultarEstadoRequest) returns (ConsultarEstadoResponse);
+  rpc GossipSync(GossipRequest) returns (GossipResponse);
+  rpc CrearPedido(CrearPedidoRequest) returns (CrearPedidoResponse);
+}
+
+message CrearPedidoRequest {
+  string request_id = 1;
+  string cliente_id = 2;
+  string pedido_id = 3;
+}
+
+message CrearPedidoResponse {
+  bool success = 1;
+  string mensaje = 2;
+  string datanode_id = 3; 
+}
+
+message ConsultarEstadoRequest {
+  string cliente_id = 1;
+  string pedido_id = 2;
+}
+
+message ConsultarEstadoResponse {
+  string pedido_id = 1;
+  string estado = 2; 
+}
+
+message UpdateOrderRequest {
+  string pedido_id = 1;
+  string estado = 2;
+  map<string, int32> vector_clock = 3;
+}
+
+message UpdateOrderResponse {
+  bool success = 1;
+}
+
+message PedidoData {
+  string estado = 1;
+  map<string, int32> vector_clock = 2;
+}
+
+message GossipRequest {
+  string origen_node_id = 1;
+  map<string, PedidoData> estado_pedidos = 2;
+}
+
+message GossipResponse {
+  bool success = 1;
+  map<string, PedidoData> pedidos_actualizados = 2; 
+}
